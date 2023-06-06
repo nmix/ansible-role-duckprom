@@ -10,8 +10,8 @@ Almost the same as [dockprom](https://github.com/stefanprodan/dockprom), but the
 * https for grafana with [letsencrypt](https://letsencrypt.org/)
 * logs with [lokki](https://grafana.com/oss/loki/)
 * basic auth;
-* alertmanager removed
-* [traefik](https://doc.traefik.io/traefik/) instead of [caddy](https://caddyserver.com/) 
+* alertmanager removed;
+* [traefik](https://doc.traefik.io/traefik/) instead of [caddy](https://caddyserver.com/) .
 
 ![duckprom diagram](.misc/duckprom.drawio.png)
 
