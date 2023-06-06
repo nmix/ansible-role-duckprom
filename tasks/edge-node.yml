@@ -43,7 +43,7 @@
 
 - name: Render promtail config
   ansible.builtin.template:
-    src: "promtail/promtail-edge.yaml"
+    src: "promtail/promtail-edge.yaml.j2"
     dest: "{{ duckprom_dir }}/promtail/promtail.yaml"
     mode: "0664"
     owner: "{{ ansible_user }}"
@@ -51,7 +51,7 @@
 
 - name: Render edge docker-compose.yaml
   ansible.builtin.template:
-    src: "docker-compose.edge.yaml"
+    src: "docker-compose.edge.yaml.j2"
     dest: "{{ duckprom_dir }}/docker-compose.yaml"
     mode: "0664"
     lstrip_blocks: true

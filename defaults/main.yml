@@ -34,7 +34,6 @@ duckprom_pushgateway_image: prom/pushgateway:v1.5.1
 duckprom_pushgateway_port: 9091
 
 duckprom_promtail_image: grafana/promtail:2.8.0
-# duckprom_promtail_push_url: http://grafana.example.com:3100/loki/api/v1/push
 
 duckprom_nodeexporter_enabled: true
 duckprom_nodeexporter_image: prom/node-exporter:v1.3.1
