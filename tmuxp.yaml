@@ -1,3 +1,4 @@
+---
 session_name: duckprom
 windows:
   - window_name: vim

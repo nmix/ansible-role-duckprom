@@ -44,7 +44,7 @@
 
 - name: Render promtail config
   ansible.builtin.template:
-    src: "promtail/promtail-main.yaml"
+    src: "promtail/promtail-main.yaml.j2"
     dest: "{{ duckprom_dir }}/promtail/promtail.yaml"
     mode: "0664"
     owner: "{{ ansible_user }}"
@@ -60,7 +60,7 @@
 
 - name: Render prometheus config
   ansible.builtin.template:
-    src: "prometheus/prometheus.yaml"
+    src: "prometheus/prometheus.yaml.j2"
     dest: "{{ duckprom_dir }}/prometheus/prometheus.yaml"
     mode: "0664"
     owner: "{{ ansible_user }}"
@@ -76,7 +76,7 @@
 
 - name: Render loki config
   ansible.builtin.template:
-    src: "loki/loki.yaml"
+    src: "loki/loki.yaml.j2"
     dest: "{{ duckprom_dir }}/loki/loki.yaml"
     mode: "0664"
     owner: "{{ ansible_user }}"
@@ -107,7 +107,7 @@
 
 - name: Render main docker-compose.yaml
   ansible.builtin.template:
-    src: "docker-compose.main.yaml"
+    src: "docker-compose.main.yaml.j2"
     dest: "{{ duckprom_dir }}/docker-compose.yaml"
     mode: "0664"
     lstrip_blocks: true
