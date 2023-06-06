@@ -1,0 +1,121 @@
+---
+- name: Install python packages
+  pip:
+    name:
+      - docker
+      - docker-compose
+      - passlib
+
+- name: Create project directory
+  ansible.builtin.file:
+    path: "{{ duckprom_dir }}"
+    state: directory
+    mode: "0775"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: true
+
+- name: Copy README.txt
+  ansible.builtin.copy:
+    src: "README.main.txt"
+    dest: "{{ duckprom_dir }}/README.txt"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: true
+
+- name: Create passwdfile
+  community.general.htpasswd:
+    path: "{{ duckprom_dir }}/passwdfile"
+    name: "{{ duckprom_basic_auth_username }}"
+    password: "{{ duckprom_basic_auth_password }}"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  become: true
+  when: duckprom_basic_auth_enabled
+
+- name: Create directory for promtail config
+  ansible.builtin.file:
+    path: "{{ duckprom_dir }}/promtail"
+    state: directory
+    mode: "0775"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Render promtail config
+  ansible.builtin.template:
+    src: "promtail/promtail-main.yaml"
+    dest: "{{ duckprom_dir }}/promtail/promtail.yaml"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Create directory for prometheus config
+  ansible.builtin.file:
+    path: "{{ duckprom_dir }}/prometheus"
+    state: directory
+    mode: "0775"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Render prometheus config
+  ansible.builtin.template:
+    src: "prometheus/prometheus.yaml"
+    dest: "{{ duckprom_dir }}/prometheus/prometheus.yaml"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Create directory for loki config
+  ansible.builtin.file:
+    path: "{{ duckprom_dir }}/loki"
+    state: directory
+    mode: "0775"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Render loki config
+  ansible.builtin.template:
+    src: "loki/loki.yaml"
+    dest: "{{ duckprom_dir }}/loki/loki.yaml"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Create directory for grafana config
+  ansible.builtin.file:
+    path: "{{ duckprom_dir }}/grafana"
+    state: directory
+    mode: "0775"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Copy grafana provisioning
+  ansible.builtin.copy:
+    src: "grafana/"
+    dest: "{{ duckprom_dir }}/grafana"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Render grafana env
+  ansible.builtin.template:
+    src: "grafana/grafana.env"
+    dest: "{{ duckprom_dir }}/grafana/grafana.env"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Render main docker-compose.yaml
+  ansible.builtin.template:
+    src: "docker-compose.main.yaml"
+    dest: "{{ duckprom_dir }}/docker-compose.yaml"
+    mode: "0664"
+    lstrip_blocks: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Run services
+  community.docker.docker_compose:
+    project_src: "{{ duckprom_dir }}"
+    pull: true
+    recreate: always

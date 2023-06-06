@@ -1,0 +1,6 @@
+session_name: duckprom
+windows:
+  - window_name: vim
+    panes:
+      - vim .
+  - windows_name: shell

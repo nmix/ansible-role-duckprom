@@ -1,0 +1,201 @@
+version: "3"
+
+services:
+  proxy:
+    image: "{{ duckprom_traefik_image }}"
+    command:
+      - "--api.dashboard={{ duckprom_traefik_dashboard_enabled | lower }}"
+      - "--api.insecure=false"
+      - "--providers.docker"
+      - "--providers.docker.constraints=Label(`com.github.project`,`duckprom-main`)"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.prom.address=:9090"
+      - "--entrypoints.loki.address=:3100"
+      {% if duckprom_traefik_https_enabled %}
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      {% endif %}
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "--entrypoints.api.address=:8080"
+      {% endif %}
+      {% if duckprom_pushgateway_enabled %}
+      - "--entrypoints.pushgateway.address=:9091"
+      {% endif %}
+      {% if duckprom_traefik_https_enabled %}
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email={{ duckprom_traefik_https_letsencrypt_email }}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      {% endif %}
+    ports:
+      - "80:80"
+      - "{{ duckprom_loki_port }}:3100"
+      - "{{ duckprom_prometheus_port }}:9090"
+      {% if duckprom_traefik_https_enabled %}
+      - "443:443"
+      {% endif %}
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "{{ duckprom_traefik_dashboard_port }}:8080"
+      {% endif %}
+      {% if duckprom_pushgateway_enabled %}
+      - "{{ duckprom_pushgateway_port }}:9091"
+      {% endif %}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      {% if duckprom_traefik_https_enabled %}
+      - "./letsencrypt:/letsencrypt"
+      {% endif %}
+      {% if duckprom_basic_auth_enabled %}
+      - "./passwdfile:/passwdfile"
+      {% endif %}
+    restart: unless-stopped
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "traefik.http.routers.traefik.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.traefik.entrypoints=api"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      {% endif %}
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.usersfile=/passwdfile"
+      {% endif %}
+
+  grafana:
+    image: "{{ duckprom_grafana_image }}"
+    volumes:
+      - "grafana_data:/var/lib/grafana"
+      - "./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards"
+      - "./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources"
+    restart: unless-stopped
+    expose:
+      - "3000"
+    env_file: [grafana/grafana.env]
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      - "traefik.http.routers.grafana.rule=Host(`{{ duckprom_grafana_host }}`)"
+      {% if duckprom_traefik_https_enabled %}
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+      {% else %}
+      - "traefik.http.routers.grafana.entrypoints=web"
+      {% endif %}
+
+  prometheus:
+    image: "{{ duckprom_prometheus_image }}"
+    volumes:
+      - "./prometheus:/etc/prometheus"
+      - "prometheus_data:/prometheus"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time={{ duckprom_prometheus_retention }}"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+    expose:
+      - "9090"
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      - "traefik.http.routers.prom.entrypoints=prom"
+      - "traefik.http.routers.prom.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.prom.middlewares=auth"
+      {% endif %}
+
+  loki:
+    image: "{{ duckprom_loki_image }}"
+    command: "-config.file=/etc/loki/config.yaml"
+    volumes:
+      - "./loki/loki.yaml:/etc/loki/config.yaml"
+      - "loki_data:/loki"
+    restart: unless-stopped
+    expose:
+      - "3100"
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      - "traefik.http.routers.loki.entrypoints=loki"
+      - "traefik.http.routers.loki.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.pushgateway.middlewares=auth"
+      {% endif %}
+
+  promtail:
+    image: "{{ duckprom_promtail_image }}"
+    command: "-config.file=/etc/promtail/config.yaml"
+    restart: unless-stopped
+    volumes:
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "./promtail/promtail.yaml:/etc/promtail/config.yaml"
+    expose:
+      - "9080"
+    networks:
+      - monitor-net
+
+  nodeexporter:
+    image: "{{ duckprom_nodeexporter_image }}"
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    expose:
+      - "9100"
+    networks:
+      - monitor-net
+
+  cadvisor:
+    image: "{{ duckprom_cadvisor_image }}"
+    privileged: true
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
+      - "/cgroup:/cgroup:ro"
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - monitor-net
+
+  {% if duckprom_pushgateway_enabled %}
+  pushgateway:
+    image: "{{ duckprom_pushgateway_image }}"
+    restart: unless-stopped
+    expose:
+      - "9091"
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      - "traefik.http.routers.pushgateway.entrypoints=pushgateway"
+      - "traefik.http.routers.pushgateway.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.pushgateway.middlewares=auth"
+      {% endif %}
+  {% endif %}
+
+networks:
+  monitor-net:
+    driver: bridge
+
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
+  loki_data: {}

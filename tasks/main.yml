@@ -1,0 +1,8 @@
+---
+- name: Install main node
+  ansible.builtin.include_tasks: main-node.yml
+  when: duckprom_node_type == "main"
+
+- name: Install edge nodes
+  ansible.builtin.include_tasks: edge-node.yml
+  when: duckprom_node_type == "edge"

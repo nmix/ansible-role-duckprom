@@ -1,0 +1,143 @@
+version: "3"
+
+services:
+  proxy:
+    image: "{{ duckprom_traefik_image }}"
+    command:
+      - "--api.dashboard={{ duckprom_traefik_dashboard_enabled | lower }}"
+      - "--api.insecure=false"
+      - "--providers.docker"
+      - "--providers.docker.constraints=Label(`com.github.project`,`duckprom-edge`)"
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "--entrypoints.api.address=:8080"
+      {% endif %}
+      {% if duckprom_nodeexporter_enabled %}
+      - "--entrypoints.nodeexporter.address=:9100"
+      {% endif %}
+      {% if duckprom_cadvisor_enabled %}
+      - "--entrypoints.cadvisor.address=:9180"
+      {% endif %}
+      {% if duckprom_nginxexporter_enabled %}
+      - "--entrypoints.nginxexporter.address=:4040"
+      {% endif %}
+    ports:
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "{{ duckprom_traefik_dashboard_port }}:8080"
+      {% endif %}
+      {% if duckprom_nodeexporter_enabled %}
+      - "{{ duckprom_nodeexporter_port }}:9100"
+      {% endif %}
+      {% if duckprom_cadvisor_enabled %}
+      - "{{ duckprom_cadvisor_port }}:9180"
+      {% endif %}
+      {% if duckprom_nginxexporter_enabled %}
+      - "{{ duckprom_nginxexporter_port }}:4040"
+      {% endif %}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      {% if duckprom_basic_auth_enabled %}
+      - "./passwdfile:/passwdfile"
+      {% endif %}
+    restart: unless-stopped
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-edge"
+      {% if duckprom_traefik_dashboard_enabled %}
+      - "traefik.http.routers.traefik.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.traefik.entrypoints=api"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      {% endif %}
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.usersfile=/passwdfile"
+      {% endif %}
+
+  promtail:
+    image: "{{ duckprom_promtail_image }}"
+    command: "-config.file=/etc/promtail/promtail-config.yaml"
+    restart: unless-stopped
+    volumes:
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "./promtail/promtail.yaml:/etc/promtail/promtail-config.yaml"
+    expose:
+      - "9080"
+    networks:
+      - monitor-net
+
+  {% if duckprom_nodeexporter_enabled %}
+  nodeexporter:
+    image: "{{ duckprom_nodeexporter_image }}"
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    restart: unless-stopped
+    expose:
+      - "9100"
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-edge"
+      - "traefik.http.routers.nodeexporter.entrypoints=nodeexporter"
+      - "traefik.http.routers.nodeexporter.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.nodeexporter.middlewares=auth"
+      {% endif %}
+  {% endif %}
+
+  {% if duckprom_cadvisor_enabled %}
+  cadvisor:
+    image: "{{ duckprom_cadvisor_image }}"
+    privileged: true
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-edge"
+      - "traefik.http.routers.cadvisor.entrypoints=cadvisor"
+      - "traefik.http.routers.cadvisor.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.cadvisor.middlewares=auth"
+      {% endif %}
+  {% endif %}
+
+  {% if duckprom_nginxexporter_enabled %}
+  nginxexporter:
+    image: "{{ duckprom_nginxexporter_image }}"
+    command:
+      - "-format=$$remote_addr - $$remote_user [$$time_local] \"$$request\" $$status $$body_bytes_sent \"$$http_referer\" \"$$http_user_agent\" rt=$$request_time uct=\"$$upstream_connect_time\" uht=\"$$upstream_header_time\" urt=\"$$upstream_response_time\""
+      - "mnt/nginxlogs/access.log"
+    restart: unless-stopped
+    volumes:
+      - "/var/log/nginx:/mnt/nginxlogs"
+    restart: unless-stopped
+    expose:
+      - 4040
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-edge"
+      - "traefik.http.routers.nginxexporter.entrypoints=nginxexporter"
+      - "traefik.http.routers.nginxexporter.rule=PathPrefix(`/`)"
+      {% if duckprom_basic_auth_enabled %}
+      - "traefik.http.routers.nginxexporter.middlewares=auth"
+      {% endif %}
+  {% endif %}
+
+networks:
+  monitor-net:
+    driver: bridge
