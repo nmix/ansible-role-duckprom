@@ -1,7 +1,10 @@
 ---
 name: Lint
 
-on: [push]
+on:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   yamllint:
@@ -13,8 +16,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install test dependencies.
+      - name: Install linter
         run: pip3 install yamllint
 
-      - name: Lint code.
+      - name: lint
         run: yamllint .
