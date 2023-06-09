@@ -114,7 +114,7 @@ Install duckprom on main server
   tasks:
     - name: Install main duckprom node
       ansible.builtin.import_role:
-        name: duckprom
+        name: nmix.duckprom
       vars:
         duckprom_dir: /opt/duckprom
         duckprom_node_type: main
@@ -132,7 +132,7 @@ Install duckprom on edge servers
   tasks:
     - name: Install edge duckprom node
       ansible.builtin.import_role:
-        name: duckprom
+        name: nmix.duckprom
       vars:
         duckprom_dir: /opt/duckprom
         duckprom_grafana_host: grafana.example.com  # for push logs
