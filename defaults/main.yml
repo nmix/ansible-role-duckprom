@@ -14,7 +14,7 @@ duckprom_traefik_dashboard_enabled: false
 duckprom_traefik_dashboard_port: 8080
 
 duckprom_grafana_host: grafana.example.com
-duckprom_grafana_image: grafana/grafana:9.2.15
+duckprom_grafana_image: grafana/grafana:9.5.3
 duckprom_grafana_security_admin_user: admin
 duckprom_grafana_security_admin_password: admin
 duckprom_grafana_users_allow_sign_up: false
