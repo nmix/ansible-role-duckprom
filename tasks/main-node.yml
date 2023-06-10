@@ -60,11 +60,15 @@
 
 - name: Render prometheus config
   ansible.builtin.template:
-    src: "prometheus/prometheus.yaml.j2"
-    dest: "{{ duckprom_dir }}/prometheus/prometheus.yaml"
+    src: "prometheus/{{ item }}.j2"
+    dest: "{{ duckprom_dir }}/prometheus/{{ item }}"
     mode: "0664"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+  with_items:
+    - prometheus.yaml
+    - duckprom.yaml
+    - custom.yaml.example
 
 - name: Create directory for loki config
   ansible.builtin.file:

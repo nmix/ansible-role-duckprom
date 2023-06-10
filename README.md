@@ -138,6 +138,13 @@ Install duckprom on edge servers
         duckprom_grafana_host: grafana.example.com  # for push logs
 ```
 
+Custom targets
+--------------
+Your Prometheus configuration may describe various targets that are not
+part of the duckprom supplied by the role.
+Create a prometheus/custom.yaml file in the installation directory
+(*/opt/duckprom* by default) and describe your `scrape_config` there.
+
 License
 -------
 

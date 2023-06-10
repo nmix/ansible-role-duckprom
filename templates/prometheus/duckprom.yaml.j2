@@ -1,0 +1,69 @@
+# A scrape configuration containing exactly one endpoint to scrape.
+scrape_configs:
+  - job_name: 'nodeexporter'
+    static_configs:
+      - targets: ['nodeexporter:9100']
+        labels:
+          host: duckprom
+      {% if duckprom_nodeexporter_enabled -%}
+      {% for host in groups[duckprom_edge_group] -%}
+      - targets: ['{{ hostvars[host]["ansible_host"] }}:{{ duckprom_nodeexporter_port }}']
+        labels:
+          host: {{ host }}
+      {% endfor %}
+      {%- endif %}
+
+    {% if duckprom_basic_auth_enabled -%}
+    basic_auth:
+      username: {{ duckprom_basic_auth_username }}
+      password: {{ duckprom_basic_auth_password }}
+    {% endif %}
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          host: duckprom
+      {% if duckprom_cadvisor_enabled -%}
+      {% for host in groups[duckprom_edge_group] -%}
+      - targets: ['{{ hostvars[host]["ansible_host"] }}:{{ duckprom_cadvisor_port }}']
+        labels:
+          host: {{ host }}
+      {% endfor %}
+      {%- endif %}
+
+    {% if duckprom_basic_auth_enabled -%}
+    basic_auth:
+      username: {{ duckprom_basic_auth_username }}
+      password: {{ duckprom_basic_auth_password }}
+    {% endif %}
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          host: duckprom
+
+  {% if duckprom_nginxexporter_enabled -%}
+  - job_name: 'nginxexporter'
+    static_configs:
+      {% for host in groups[duckprom_nginxexporter_group] -%}
+      - targets: ['{{ hostvars[host]["ansible_host"] }}:{{ duckprom_nginxexporter_port }}']
+        labels:
+          host: {{ host }}
+      {% endfor %}
+
+    {% if duckprom_basic_auth_enabled -%}
+    basic_auth:
+      username: {{ duckprom_basic_auth_username }}
+      password: {{ duckprom_basic_auth_password }}
+    {% endif %}
+  {% endif %}
+
+  {% if duckprom_pushgateway_enabled -%}
+  - job_name: 'pushgateway'
+    static_configs:
+      - targets: ['pushgateway:9091']
+        labels:
+          host: duckprom
+  {% endif %}
