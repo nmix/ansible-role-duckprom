@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: duckprom
-  author: zoidenberg
+  author: Nikolay Mikhaylichenko
   description: Install observation services
   license: "license (BSD, MIT)"
   galaxy_tags:

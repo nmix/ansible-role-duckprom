@@ -45,19 +45,19 @@ duckprom_basic_auth_enabled: true
 duckprom_basic_auth_username: user
 duckprom_basic_auth_password: secret
 
-duckprom_traefik_image: traefik:v2.9
+duckprom_traefik_image: traefik:v2.10
 duckprom_traefik_https_enabled: false
 duckprom_traefik_https_letsencrypt_email: me@example.com
 duckprom_traefik_dashboard_enabled: false
 duckprom_traefik_dashboard_port: 8080
 
 duckprom_grafana_host: grafana.example.com
-duckprom_grafana_image: grafana/grafana:9.2.15
+duckprom_grafana_image: grafana/grafana:9.5.3
 duckprom_grafana_security_admin_user: admin
 duckprom_grafana_security_admin_password: admin
 duckprom_grafana_users_allow_sign_up: false
 
-duckprom_prometheus_image: prom/prometheus:v2.43.0
+duckprom_prometheus_image: prom/prometheus:v2.44.0
 duckprom_prometheus_port: 9090
 duckprom_prometheus_retention: 168h
 duckprom_prometheus_scrape_interval: 15s
@@ -68,13 +68,13 @@ duckprom_loki_port: 3100
 duckprom_loki_retention: 168h
 
 duckprom_pushgateway_enabled: true
-duckprom_pushgateway_image: prom/pushgateway:v1.5.1
+duckprom_pushgateway_image: prom/pushgateway:v1.6.0
 duckprom_pushgateway_port: 9091
 
-duckprom_promtail_image: grafana/promtail:2.8.0
+duckprom_promtail_image: grafana/promtail:2.8.2
 
 duckprom_nodeexporter_enabled: true
-duckprom_nodeexporter_image: prom/node-exporter:v1.3.1
+duckprom_nodeexporter_image: prom/node-exporter:v1.6.0
 duckprom_nodeexporter_port: 9100
 
 duckprom_cadvisor_enabled: true
@@ -85,7 +85,6 @@ duckprom_nginxexporter_enabled: false
 duckprom_nginxexporter_group: edge
 duckprom_nginxexporter_image: quay.io/martinhelmich/prometheus-nginxlog-exporter:v1.10.0
 duckprom_nginxexporter_port: 4040
-
 ```
 
 Example Playbook
