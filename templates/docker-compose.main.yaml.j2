@@ -128,7 +128,7 @@ services:
       - "traefik.http.routers.loki.entrypoints=loki"
       - "traefik.http.routers.loki.rule=PathPrefix(`/`)"
       {% if duckprom_basic_auth_enabled %}
-      - "traefik.http.routers.pushgateway.middlewares=auth"
+      - "traefik.http.routers.loki.middlewares=auth"
       {% endif %}
 
   promtail:
