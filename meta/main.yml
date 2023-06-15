@@ -11,3 +11,9 @@ galaxy_info:
     - nodeexporter
     - cadvisor
     - nginxexporter
+  platforms:
+    - name: Ubuntu
+      versions:
+        - lunar
+        - jammy
+        - focal

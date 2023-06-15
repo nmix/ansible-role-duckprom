@@ -47,3 +47,7 @@ duckprom_nginxexporter_enabled: false
 duckprom_nginxexporter_group: edge
 duckprom_nginxexporter_image: quay.io/martinhelmich/prometheus-nginxlog-exporter:v1.10.0
 duckprom_nginxexporter_port: 4040
+
+duckprom_portainer_enabled: false
+duckprom_portainer_image: portainer/portainer-ce:2.18.3
+duckprom_portainer_host: portainer.example.com

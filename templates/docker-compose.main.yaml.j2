@@ -192,6 +192,33 @@ services:
       {% endif %}
   {% endif %}
 
+  {% if duckprom_portainer_enabled %}
+  portainer:
+    image: "{{ duckprom_portainer_image }}"
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    # --- fixed port 8000
+    #     @see https://github.com/portainer/portainer/issues/4683
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - monitor-net
+    labels:
+      - "com.github.project=duckprom-main"
+      - "traefik.http.routers.portainer.rule=Host(`{{ duckprom_portainer_host }}`)"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      {% if duckprom_traefik_https_enabled %}
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+      {% else %}
+      - "traefik.http.routers.portainer.entrypoints=web"
+      {% endif %}
+  {% endif %}
+
 networks:
   monitor-net:
     driver: bridge
@@ -200,3 +227,7 @@ volumes:
   grafana_data: {}
   prometheus_data: {}
   loki_data: {}
+  {% if duckprom_portainer_enabled %}
+  portainer_data: {}
+  {% endif %}
+
