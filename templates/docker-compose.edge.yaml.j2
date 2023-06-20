@@ -115,7 +115,7 @@ services:
       {% endif %}
   {% endif %}
 
-  {% if duckprom_nginxexporter_enabled %}
+  {% if duckprom_nginxexporter_enabled and inventory_hostname in groups[duckprom_nginxexporter_group] %}
   nginxexporter:
     image: "{{ duckprom_nginxexporter_image }}"
     command:
