@@ -19,6 +19,8 @@ Almost the same as [dockprom](https://github.com/stefanprodan/dockprom), but the
 Requirements
 ------------
 
+### Docker log format
+
 Log options for docker daemon: `"{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"` 
 
 Example of */etc/docker/daemon.json*
@@ -32,6 +34,22 @@ Example of */etc/docker/daemon.json*
 }
 ```
 
+### Nginx log format
+
+Duckprom can scrape metrics from nginx logs with https://github.com/martin-helmich/prometheus-nginxlog-exporter.
+
+Fix log format in nginx
+```nginx
+# /etc/nginx/nginx.conf
+
+log_format upstream_time '$remote_addr - $remote_user [$time_local] '
+                         '"$request" $status $body_bytes_sent '
+                         '"$http_referer" "$http_user_agent" '
+                         'rt=$request_time uct="$upstream_connect_time" uht="$upstream_header_time" urt="$upstream_response_time"';
+access_log /var/log/nginx/access.log upstream_time;
+```
+
+Import NGINX Log Metrics into duckprom grafana.
 
 Role Variables
 --------------
