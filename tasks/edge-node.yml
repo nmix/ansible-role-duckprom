@@ -59,7 +59,7 @@
     group: "{{ ansible_user }}"
 
 - name: Run services
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ duckprom_dir }}"
-    pull: true
+    pull: always
     recreate: always
