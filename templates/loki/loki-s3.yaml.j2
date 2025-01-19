@@ -1,0 +1,31 @@
+auth_enabled: false
+
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 3100
+
+schema_config:
+  configs:
+    - from: 2025-01-01
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  storage:
+    s3:
+      endpoint: {{ duckprom_loki_s3_endpoint }}
+      access_key_id: {{ duckprom_loki_s3_access_key }}
+      secret_access_key: {{ duckprom_loki_s3_secret_key }}
+      bucketnames: {{ duckprom_loki_s3_bucketname }}
+      insecure: {{ duckprom_loki_s3_insecure }}
+      s3forcepathstyle: {{ duckprom_loki_s3_s3forcepathstyle }}
+      region: {{ duckprom_loki_s3_region }}
+  ring:
+    kvstore:
+      store: inmemory

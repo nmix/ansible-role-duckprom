@@ -85,6 +85,17 @@ duckprom_prometheus_evaluation_interval: 15s
 duckprom_loki_image: grafana/loki:2.9.4
 duckprom_loki_port: 3100
 duckprom_loki_retention: 168h
+# --- filesystem/s3
+duckprom_loki_storage: filesystem
+
+duckprom_loki_s3_endpoint: example.com
+duckprom_loki_s3_access_key: access_key
+duckprom_loki_s3_secret_key: secret_key
+duckprom_loki_s3_bucketname: backetname
+duckprom_loki_s3_insecure: false
+duckprom_loki_s3_s3forcepathstyle: false
+duckprom_loki_s3_region: ru-1
+
 
 duckprom_pushgateway_enabled: true
 duckprom_pushgateway_image: prom/pushgateway:v1.6.0

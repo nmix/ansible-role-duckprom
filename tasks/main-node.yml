@@ -85,6 +85,16 @@
     mode: "0664"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+  when: duckprom_loki_storage == "filesystem"
+
+- name: Render loki config for s3
+  ansible.builtin.template:
+    src: "loki/loki-s3.yaml.j2"
+    dest: "{{ duckprom_dir }}/loki/loki.yaml"
+    mode: "0664"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when: duckprom_loki_storage == "s3"
 
 - name: Create directory for grafana config
   ansible.builtin.file:
